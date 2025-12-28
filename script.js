@@ -937,10 +937,16 @@ function renderHistory() {
                         <strong>End:</strong> ${formatDateTime(shift.shiftEnd)}
                     </p>
                 </div>
-                <button onclick="deleteShift(${shift.id})" 
-                        class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200 text-sm">
-                    Delete
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="exportShiftToPDF(${shift.id})" 
+                            class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition duration-200 text-sm">
+                        📝 PDF
+                    </button>
+                    <button onclick="deleteShift(${shift.id})" 
+                            class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200 text-sm">
+                        Delete
+                    </button>
+                </div>
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -1046,6 +1052,152 @@ function clearHistory() {
         renderHistory();
         showMessage('Shift history cleared successfully!', 'success');
     }
+}
+
+// Export shift to PDF
+function exportShiftToPDF(shiftId) {
+    const shift = shiftHistory.find(s => s.id === shiftId);
+    if (!shift) return;
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    // Set font
+    doc.setFont('helvetica');
+    
+    // Title
+    doc.setFontSize(20);
+    doc.setTextColor(40, 40, 40);
+    doc.text('FUEL RECORD - SHIFT REPORT', 148, 15, { align: 'center' });
+    
+    // Shift Info
+    doc.setFontSize(12);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Employee: ${shift.employeeName}`, 15, 30);
+    doc.text(`Shift Start: ${formatDateTime(shift.shiftStart)}`, 15, 37);
+    doc.text(`Shift End: ${formatDateTime(shift.shiftEnd)}`, 15, 44);
+    
+    const shiftDate = new Date(shift.shiftStart).toLocaleDateString('en-IN');
+    doc.text(`Date: ${shiftDate}`, 220, 30);
+    doc.text(`Total Transactions: ${shift.summary.totalTransactions}`, 220, 37);
+    
+    // Summary boxes
+    const boxY = 55;
+    const boxWidth = 65;
+    const boxHeight = 30;
+    const gap = 5;
+    
+    // Cash box
+    doc.setFillColor(220, 252, 231);
+    doc.rect(15, boxY, boxWidth, boxHeight, 'F');
+    doc.setDrawColor(34, 197, 94);
+    doc.rect(15, boxY, boxWidth, boxHeight, 'S');
+    doc.setFontSize(10);
+    doc.setTextColor(22, 101, 52);
+    doc.text('CASH PAYMENT', 15 + boxWidth/2, boxY + 8, { align: 'center' });
+    doc.setFontSize(16);
+    doc.setTextColor(22, 163, 74);
+    doc.text(`Rs ${shift.summary.cashTotal.toFixed(2)}`, 15 + boxWidth/2, boxY + 18, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Discount: Rs ${shift.summary.cashDiscount.toFixed(2)}`, 15 + boxWidth/2, boxY + 25, { align: 'center' });
+    
+    // Card box
+    doc.setFillColor(243, 232, 255);
+    doc.rect(15 + boxWidth + gap, boxY, boxWidth, boxHeight, 'F');
+    doc.setDrawColor(168, 85, 247);
+    doc.rect(15 + boxWidth + gap, boxY, boxWidth, boxHeight, 'S');
+    doc.setFontSize(10);
+    doc.setTextColor(107, 33, 168);
+    doc.text('CARD PAYMENT', 15 + boxWidth + gap + boxWidth/2, boxY + 8, { align: 'center' });
+    doc.setFontSize(16);
+    doc.setTextColor(147, 51, 234);
+    doc.text(`Rs ${shift.summary.cardTotal.toFixed(2)}`, 15 + boxWidth + gap + boxWidth/2, boxY + 18, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Discount: Rs ${shift.summary.cardDiscount.toFixed(2)}`, 15 + boxWidth + gap + boxWidth/2, boxY + 25, { align: 'center' });
+    
+    // Online box
+    doc.setFillColor(219, 234, 254);
+    doc.rect(15 + (boxWidth + gap) * 2, boxY, boxWidth, boxHeight, 'F');
+    doc.setDrawColor(59, 130, 246);
+    doc.rect(15 + (boxWidth + gap) * 2, boxY, boxWidth, boxHeight, 'S');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 64, 175);
+    doc.text('ONLINE PAYMENT', 15 + (boxWidth + gap) * 2 + boxWidth/2, boxY + 8, { align: 'center' });
+    doc.setFontSize(16);
+    doc.setTextColor(37, 99, 235);
+    doc.text(`Rs ${shift.summary.onlineTotal.toFixed(2)}`, 15 + (boxWidth + gap) * 2 + boxWidth/2, boxY + 18, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Discount: Rs ${shift.summary.onlineDiscount.toFixed(2)}`, 15 + (boxWidth + gap) * 2 + boxWidth/2, boxY + 25, { align: 'center' });
+    
+    // Total box
+    doc.setFillColor(254, 243, 199);
+    doc.rect(15 + (boxWidth + gap) * 3, boxY, boxWidth, boxHeight, 'F');
+    doc.setDrawColor(245, 158, 11);
+    doc.rect(15 + (boxWidth + gap) * 3, boxY, boxWidth, boxHeight, 'S');
+    doc.setFontSize(10);
+    doc.setTextColor(146, 64, 14);
+    doc.text('TOTAL COLLECTION', 15 + (boxWidth + gap) * 3 + boxWidth/2, boxY + 8, { align: 'center' });
+    doc.setFontSize(16);
+    doc.setTextColor(217, 119, 6);
+    doc.text(`Rs ${shift.summary.grandTotal.toFixed(2)}`, 15 + (boxWidth + gap) * 3 + boxWidth/2, boxY + 18, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Discount: Rs ${shift.summary.totalDiscount.toFixed(2)}`, 15 + (boxWidth + gap) * 3 + boxWidth/2, boxY + 25, { align: 'center' });
+    
+    // Transaction table
+    const tableData = shift.transactions.map(t => [
+        formatDateTime(t.timestamp),
+        t.paymentMethod.toUpperCase(),
+        `Rs ${t.amount.toFixed(2)}`,
+        `Rs ${t.discount.toFixed(2)}`
+    ]);
+    
+    doc.autoTable({
+        startY: 95,
+        head: [['Time', 'Payment Method', 'Amount', 'Discount']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [79, 70, 229],
+            textColor: 255,
+            fontSize: 10,
+            fontStyle: 'bold'
+        },
+        bodyStyles: {
+            fontSize: 9
+        },
+        alternateRowStyles: {
+            fillColor: [245, 245, 245]
+        },
+        margin: { left: 15, right: 15 }
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(
+            `Generated on ${new Date().toLocaleString('en-IN')} | Page ${i} of ${pageCount}`,
+            148,
+            200,
+            { align: 'center' }
+        );
+    }
+    
+    // Save PDF
+    const fileName = `shift-report-${shift.employeeName.replace(/\s+/g, '-')}-${shiftDate.replace(/\//g, '-')}.pdf`;
+    doc.save(fileName);
+    
+    showMessage('PDF exported successfully!', 'success');
 }
 
 // Save fuel prices
