@@ -380,7 +380,7 @@ function renderTransactions() {
     if (filteredTransactions.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
                     ${currentFilter === 'all' ? 'No transactions yet. Add your first transaction above!' : `No ${currentFilter} transactions found.`}
                 </td>
             </tr>
@@ -393,9 +393,12 @@ function renderTransactions() {
         <tr class="border-b border-gray-200 transaction-row">
             <td class="px-4 py-3 text-sm text-gray-700">${formatDateTime(transaction.timestamp)}</td>
             <td class="px-4 py-3">
-                <span class="payment-badge ${transaction.paymentMethod}">
-                    ${getPaymentIcon(transaction.paymentMethod)} ${transaction.paymentMethod}
-                </span>
+                <select onchange="updatePaymentMethod(${transaction.id}, this.value)" 
+                        class="payment-method-select px-3 py-1 rounded border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <option value="cash" ${transaction.paymentMethod === 'cash' ? 'selected' : ''}>💵 Cash</option>
+                    <option value="card" ${transaction.paymentMethod === 'card' ? 'selected' : ''}>💳 Card</option>
+                    <option value="online" ${transaction.paymentMethod === 'online' ? 'selected' : ''}>📱 Online</option>
+                </select>
             </td>
             <td class="px-4 py-3 text-right text-sm font-semibold text-gray-900">₹${transaction.amount.toFixed(2)}</td>
             <td class="px-4 py-3 text-right text-sm font-semibold text-green-600">₹${transaction.discount.toFixed(2)}</td>
@@ -421,6 +424,22 @@ function deleteTransaction(id) {
         updateFilterCounts();
         showMessage('Transaction deleted successfully!', 'success');
     }
+}
+
+// Update payment method for a transaction
+function updatePaymentMethod(id, newMethod) {
+    const transaction = transactions.find(t => t.id === id);
+    if (!transaction) return;
+    
+    const oldMethod = transaction.paymentMethod;
+    transaction.paymentMethod = newMethod;
+    
+    saveData();
+    updateDashboard();
+    renderTransactions();
+    updateFilterCounts();
+    
+    showMessage(`Payment method updated from ${oldMethod} to ${newMethod}!`, 'success');
 }
 
 // Filter transactions
