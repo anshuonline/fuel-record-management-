@@ -987,18 +987,23 @@ function importDataFile(event) {
                 return;
             }
             
+            let newTransactionsCount = 0;
+            let newShiftsCount = 0;
+            
             // Merge transactions (avoid duplicates by ID)
-            if (importedData.data.transactions) {
+            if (importedData.data.transactions && Array.isArray(importedData.data.transactions)) {
                 const existingIds = new Set(transactions.map(t => t.id));
                 const newTransactions = importedData.data.transactions.filter(t => !existingIds.has(t.id));
                 transactions = [...transactions, ...newTransactions];
+                newTransactionsCount = newTransactions.length;
             }
             
             // Merge shift history (avoid duplicates by ID)
-            if (importedData.data.shiftHistory) {
+            if (importedData.data.shiftHistory && Array.isArray(importedData.data.shiftHistory)) {
                 const existingShiftIds = new Set(shiftHistory.map(s => s.id));
                 const newShifts = importedData.data.shiftHistory.filter(s => !existingShiftIds.has(s.id));
                 shiftHistory = [...shiftHistory, ...newShifts];
+                newShiftsCount = newShifts.length;
             }
             
             // Update fuel prices if present
@@ -1019,12 +1024,16 @@ function importDataFile(event) {
             loadFuelPrices();
             updatePetrolPriceFromType();
             
-            showMessage(`Data imported successfully! Added ${newTransactions.length} transactions and ${newShifts.length} shifts.`, 'success');
+            showMessage(`Data imported successfully! Added ${newTransactionsCount} transactions and ${newShiftsCount} shifts.`, 'success');
             
         } catch (error) {
             console.error('Import error:', error);
-            showMessage('Error importing data. Please check the file format.', 'error');
+            showMessage(`Error importing data: ${error.message}. Please check the file format.`, 'error');
         }
+    };
+    
+    reader.onerror = () => {
+        showMessage('Error reading file. Please try again.', 'error');
     };
     
     reader.readAsText(file);
