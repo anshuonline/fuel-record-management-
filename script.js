@@ -1054,6 +1054,336 @@ function clearHistory() {
     }
 }
 
+// Download Bengali User Guide
+function downloadBengaliGuide() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    let yPos = 20;
+    const lineHeight = 7;
+    const pageHeight = 280;
+    
+    // Helper function to add new page if needed
+    function checkPageBreak(neededSpace = 15) {
+        if (yPos + neededSpace > pageHeight) {
+            doc.addPage();
+            yPos = 20;
+        }
+    }
+    
+    // Title
+    doc.setFontSize(24);
+    doc.setTextColor(79, 70, 229);
+    doc.text('ফিউয়েল রেকর্ড বুক', 105, yPos, { align: 'center' });
+    yPos += 10;
+    doc.setFontSize(16);
+    doc.setTextColor(100, 100, 100);
+    doc.text('ব্যবহারকারী গাইড', 105, yPos, { align: 'center' });
+    yPos += 15;
+    
+    // Introduction
+    doc.setFontSize(14);
+    doc.setTextColor(40, 40, 40);
+    doc.text('ভূমিকা', 15, yPos);
+    yPos += 8;
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    const introText = 'এই অ্যাপ্লিকেশনটি পেট্রোল পাম্পের দৈনন্দিন লেনদেন, ছাড়, এবখ শিফট ম্যানেজমেন্টের জন্য তৈরি\nকরা হয়েছে। এটি খুব সহজ এবং ব্যবহার উপযোগী।';
+    doc.text(introText, 15, yPos, { maxWidth: 180 });
+    yPos += 20;
+    
+    checkPageBreak();
+    
+    // Section 1: Getting Started
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('১. শুরু করা', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 40);
+    doc.text('শিফট তথ্য সেট করুন:', 15, yPos);
+    yPos += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• কর্মচারীর নাম লিখুন', 20, yPos);
+    yPos += 5;
+    doc.text('• শিফট শুরুর সময় নির্বাচন করুন', 20, yPos);
+    yPos += 5;
+    doc.text('• শিফট শেষের সময় নির্বাচন করুন', 20, yPos);
+    yPos += 5;
+    doc.text('• "Save Shift Info" বাটনে ক্লিক করুন', 20, yPos);
+    yPos += 10;
+    
+    checkPageBreak();
+    
+    // Section 2: Fuel Prices
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('২. ফিউয়েল দাম সেট করা', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• Settings ট্যাবে যান', 20, yPos);
+    yPos += 5;
+    doc.text('• তিন ধরনের ফিউয়েলের দাম দিন:', 20, yPos);
+    yPos += 5;
+    doc.text('  - Normal Petrol (সাধারণ পেট্রোল)', 25, yPos);
+    yPos += 5;
+    doc.text('  - XP95 (Speed পেট্রোল)', 25, yPos);
+    yPos += 5;
+    doc.text('  - Diesel (ডিজেল)', 25, yPos);
+    yPos += 5;
+    doc.text('• "Save Fuel Prices" বাটনে ক্লিক করুন', 20, yPos);
+    yPos += 10;
+    
+    checkPageBreak();
+    
+    // Section 3: Discount Calculator
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('৩. ছাড় ক্যালকুলেটর', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 40);
+    doc.text('দুই ধরনের গণনা:', 15, yPos);
+    yPos += 7;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('A) গ্রাহকের দাম অনুযায়ী:', 20, yPos);
+    yPos += 5;
+    doc.text('  1. Fuel Type নির্বাচন করুন', 25, yPos);
+    yPos += 5;
+    doc.text('  2. গ্রাহকের দেওয়া টাকা লিখুন', 25, yPos);
+    yPos += 5;
+    doc.text('  3. ছাড় অটোম্যাটিক গণনা হবে', 25, yPos);
+    yPos += 5;
+    doc.text('  4. "ফিউয়েল টু গিভ" দেখুন (গ্রাহককে এই পরিমাণ দিতে হবে)', 25, yPos);
+    yPos += 7;
+    
+    doc.text('B) লিটার অনুযায়ী:', 20, yPos);
+    yPos += 5;
+    doc.text('  1. Fuel Type নির্বাচন করুন', 25, yPos);
+    yPos += 5;
+    doc.text('  2. লিটার সখ ্যা লিখুন', 25, yPos);
+    yPos += 5;
+    doc.text('  3. প্রতি লিটার ছাড় লিখুন (ডিফল্ট: ১ টাকা)', 25, yPos);
+    yPos += 5;
+    doc.text('  4. মোট ছাড় এবং "ফিউয়েল টু গিভ" দেখুন', 25, yPos);
+    yPos += 10;
+    
+    checkPageBreak(30);
+    
+    // Section 4: Adding Transactions
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('৪. লেনদেন যুক্ত করা', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• ছাড় ক্যালকুলেটর ব্যবহার করে ছাড় গণনা করুন', 20, yPos);
+    yPos += 5;
+    doc.text('• "Use Discount" বাটনে ক্লিক করুন', 20, yPos);
+    yPos += 5;
+    doc.text('• Payment Method নির্বাচন করুন: Cash/Card/Online', 20, yPos);
+    yPos += 5;
+    doc.text('• "Add Transaction" বাটনে ক্লিক করুন', 20, yPos);
+    yPos += 10;
+    
+    checkPageBreak();
+    
+    // Section 5: Payment Methods
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('৫. পেমেন্ট মেথড', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• Cash: নগদ টাকার লেনদেন', 20, yPos);
+    yPos += 5;
+    doc.text('• Card: কার্ডের মাধ্যমে পেমেন্ট', 20, yPos);
+    yPos += 5;
+    doc.text('• Online: অনলাইন পেমেন্ট (UPI/মোবাইল ব্যাংকিং)', 20, yPos);
+    yPos += 7;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 40);
+    doc.text('গুরুত্বপূর্ণ:', 20, yPos);
+    yPos += 5;
+    doc.setFontSize(10);
+    doc.setTextColor(220, 38, 38);
+    doc.text('• Card এবং Online ছাড় "Online Discount"-এ যুক্ত হয়', 25, yPos);
+    yPos += 5;
+    doc.text('• শুধু Cash ছাড় "Cash Discount"-এ যুক্ত হয়', 25, yPos);
+    yPos += 10;
+    
+    checkPageBreak();
+    
+    // Section 6: Transaction History
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('৬. লেনদেনের ইতিহাস', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• সব লেনদেন টেবিলে দেখা যাবে', 20, yPos);
+    yPos += 5;
+    doc.text('• Filter ব্যবহার করে Cash/Card/Online আলাদা দেখুন', 20, yPos);
+    yPos += 5;
+    doc.text('• Payment Method পরিবর্তন করতে পারবেন', 20, yPos);
+    yPos += 5;
+    doc.text('• Delete বাটনে ভুল এন্ট্রি মুছে ফেলুন', 20, yPos);
+    yPos += 10;
+    
+    checkPageBreak();
+    
+    // Section 7: Ending Shift
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('৭. শিফট শেষ করা', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• শিফট শেষে "End Shift" বাটনে ক্লিক করুন', 20, yPos);
+    yPos += 5;
+    doc.text('• একটি Summary পপ-আপ আসবে', 20, yPos);
+    yPos += 5;
+    doc.text('• সম্পূর্ণ শিফটের তথ্য সেখানে থাকবে', 20, yPos);
+    yPos += 5;
+    doc.text('• ডেটা অটোম্যাটিক History-তে সেভ হবে', 20, yPos);
+    yPos += 10;
+    
+    checkPageBreak();
+    
+    // Section 8: Viewing History
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('৮. শিফট ইতিহাস দেখা', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• "All Shifts History" ট্যাবে ক্লিক করুন', 20, yPos);
+    yPos += 5;
+    doc.text('• সব শিফটের সংক্ষিপ্ত তথ্য দেখতে পারবেন', 20, yPos);
+    yPos += 5;
+    doc.text('• "View Details" বাটনে সম্পূর্ণ লেনদেন দেখুন', 20, yPos);
+    yPos += 5;
+    doc.text('• "PDF" বাটনে রিপোর্ট ডাউনলোড করুন', 20, yPos);
+    yPos += 10;
+    
+    checkPageBreak();
+    
+    // Section 9: Data Backup
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('৯. ডেটা ব্যাকআপ', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• Settings ট্যাবে যান', 20, yPos);
+    yPos += 5;
+    doc.text('• "Export All Data" বাটনে ক্লিক করে ব্যাকআপ নিন', 20, yPos);
+    yPos += 5;
+    doc.text('• JSON ফাইল ডাউনলোড হবে', 20, yPos);
+    yPos += 5;
+    doc.text('• অন্য ব্রাউজারে "Import Data" দিয়ে পুনরায় লোড করুন', 20, yPos);
+    yPos += 10;
+    
+    checkPageBreak(30);
+    
+    // Section 10: Tips
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('১০. গুরুত্বপূর্ণ টিপস', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• প্রতিদিন শিফট শেষে PDF রিপোর্ট ডাউনলোড করুন', 20, yPos);
+    yPos += 5;
+    doc.text('• সাপ্তাহিক ডেটা এক্সপোর্ট করে সেভ করে রাখুন', 20, yPos);
+    yPos += 5;
+    doc.text('• ছাড় দেওয়ার আগে Calculator ব্যবহার করুন', 20, yPos);
+    yPos += 5;
+    doc.text('• "ফিউয়েল টু গিভ" দেখে গ্রাহককে দিন', 20, yPos);
+    yPos += 5;
+    doc.text('• ভুল হলে Payment Method পরিবর্তন করতে পারবেন', 20, yPos);
+    yPos += 5;
+    doc.text('• ডেটা অটোম্যাটিক সেভ হয় (IndexedDB)', 20, yPos);
+    yPos += 15;
+    
+    checkPageBreak();
+    
+    // Examples
+    doc.setFontSize(14);
+    doc.setTextColor(79, 70, 229);
+    doc.text('উদাহরণ', 15, yPos);
+    yPos += 8;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 40);
+    doc.text('উদাহরণ ১: গ্রাহক ২৫০ টাকার পেট্রোল কিনলেন', 15, yPos);
+    yPos += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• Normal Petrol (106.39/L)', 20, yPos);
+    yPos += 5;
+    doc.text('• Customer Price: 250', 20, yPos);
+    yPos += 5;
+    doc.text('• Discount = 250 / 106.39 = 2.35', 20, yPos);
+    yPos += 5;
+    doc.text('• Fuel to Give = 250 + 2.35 = 252.35 টাকার পেট্রোল দিন', 20, yPos);
+    yPos += 10;
+    
+    doc.setFontSize(11);
+    doc.setTextColor(40, 40, 40);
+    doc.text('উদাহরণ ২: গ্রাহক ২ লিটার পেট্রোল কিনলেন', 15, yPos);
+    yPos += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text('• Liters: 2', 20, yPos);
+    yPos += 5;
+    doc.text('• Discount per Liter: 1', 20, yPos);
+    yPos += 5;
+    doc.text('• Customer Payment = 2 x 106.39 = 212.78', 20, yPos);
+    yPos += 5;
+    doc.text('• Total Discount = 2 x 1 = 2.00', 20, yPos);
+    yPos += 5;
+    doc.text('• Fuel to Give = 212.78 + 2.00 = 214.78 টাকার পেট্রোল দিন', 20, yPos);
+    yPos += 15;
+    
+    // Footer
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(
+            `Fuel Record Book - User Guide | পৃষ্ঠা ${i} of ${totalPages}`,
+            105,
+            285,
+            { align: 'center' }
+        );
+    }
+    
+    // Save PDF
+    doc.save('Fuel-Record-Book-Bengali-Guide.pdf');
+    showMessage('বাংলা গাইড ডাউনলোড সম্পন্ন!', 'success');
+}
+
 // Export shift to PDF
 function exportShiftToPDF(shiftId) {
     const shift = shiftHistory.find(s => s.id === shiftId);
