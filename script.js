@@ -14,9 +14,40 @@ let fuelPrices = {
     diesel: 90.00
 }; // Default fuel prices
 
+// IndexedDB setup
+let db;
+const DB_NAME = 'FuelRecordDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'fuelData';
+
+// Initialize IndexedDB
+function initDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => {
+            console.error('IndexedDB error:', request.error);
+            reject(request.error);
+        };
+        
+        request.onsuccess = () => {
+            db = request.result;
+            resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+            db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+            }
+        };
+    });
+}
+
 // Load data from localStorage on page load
-window.addEventListener('DOMContentLoaded', () => {
-    loadData();
+window.addEventListener('DOMContentLoaded', async () => {
+    await initDB();
+    await loadData();
     updateDashboard();
     renderTransactions();
     displayShiftInfo();
@@ -390,34 +421,97 @@ function clearAllData() {
 
 // Save data to localStorage
 function saveData() {
+    // Save to localStorage (backup)
     localStorage.setItem('fuelRecordTransactions', JSON.stringify(transactions));
     localStorage.setItem('fuelRecordShiftInfo', JSON.stringify(shiftInfo));
     localStorage.setItem('fuelRecordShiftHistory', JSON.stringify(shiftHistory));
     localStorage.setItem('fuelRecordPrices', JSON.stringify(fuelPrices));
+    
+    // Save to IndexedDB (persistent)
+    saveToIndexedDB();
+}
+
+// Save to IndexedDB
+function saveToIndexedDB() {
+    if (!db) return;
+    
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    
+    const allData = {
+        key: 'fuelRecordData',
+        transactions: transactions,
+        shiftInfo: shiftInfo,
+        shiftHistory: shiftHistory,
+        fuelPrices: fuelPrices,
+        lastUpdated: new Date().toISOString()
+    };
+    
+    store.put(allData);
 }
 
 // Load data from localStorage
 function loadData() {
-    const savedTransactions = localStorage.getItem('fuelRecordTransactions');
-    const savedShiftInfo = localStorage.getItem('fuelRecordShiftInfo');
-    const savedShiftHistory = localStorage.getItem('fuelRecordShiftHistory');
-    const savedFuelPrices = localStorage.getItem('fuelRecordPrices');
-    
-    if (savedTransactions) {
-        transactions = JSON.parse(savedTransactions);
-    }
-    
-    if (savedShiftInfo) {
-        shiftInfo = JSON.parse(savedShiftInfo);
-    }
-    
-    if (savedShiftHistory) {
-        shiftHistory = JSON.parse(savedShiftHistory);
-    }
-    
-    if (savedFuelPrices) {
-        fuelPrices = JSON.parse(savedFuelPrices);
-    }
+    return new Promise(async (resolve) => {
+        // Try to load from IndexedDB first
+        const indexedDBData = await loadFromIndexedDB();
+        
+        if (indexedDBData) {
+            transactions = indexedDBData.transactions || [];
+            shiftInfo = indexedDBData.shiftInfo || { employeeName: '', shiftStart: '', shiftEnd: '' };
+            shiftHistory = indexedDBData.shiftHistory || [];
+            fuelPrices = indexedDBData.fuelPrices || { normal: 106.39, xp95: 113.73, diesel: 90.00 };
+        } else {
+            // Fallback to localStorage
+            const savedTransactions = localStorage.getItem('fuelRecordTransactions');
+            const savedShiftInfo = localStorage.getItem('fuelRecordShiftInfo');
+            const savedShiftHistory = localStorage.getItem('fuelRecordShiftHistory');
+            const savedFuelPrices = localStorage.getItem('fuelRecordPrices');
+            
+            if (savedTransactions) {
+                transactions = JSON.parse(savedTransactions);
+            }
+            
+            if (savedShiftInfo) {
+                shiftInfo = JSON.parse(savedShiftInfo);
+            }
+            
+            if (savedShiftHistory) {
+                shiftHistory = JSON.parse(savedShiftHistory);
+            }
+            
+            if (savedFuelPrices) {
+                fuelPrices = JSON.parse(savedFuelPrices);
+            }
+            
+            // Save to IndexedDB for future
+            saveToIndexedDB();
+        }
+        
+        resolve();
+    });
+}
+
+// Load from IndexedDB
+function loadFromIndexedDB() {
+    return new Promise((resolve) => {
+        if (!db) {
+            resolve(null);
+            return;
+        }
+        
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get('fuelRecordData');
+        
+        request.onsuccess = () => {
+            resolve(request.result);
+        };
+        
+        request.onerror = () => {
+            resolve(null);
+        };
+    });
 }
 
 // Utility: Format date and time
@@ -842,4 +936,99 @@ function displayCurrentPrices() {
     document.getElementById('displayNormalPrice').textContent = `₹${fuelPrices.normal.toFixed(2)}`;
     document.getElementById('displayXP95Price').textContent = `₹${fuelPrices.xp95.toFixed(2)}`;
     document.getElementById('displayDieselPrice').textContent = `₹${fuelPrices.diesel.toFixed(2)}`;
+}
+
+// Export all data as JSON
+function exportAllData() {
+    const exportData = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        appName: 'Fuel Record Book',
+        data: {
+            transactions: transactions,
+            shiftInfo: shiftInfo,
+            shiftHistory: shiftHistory,
+            fuelPrices: fuelPrices
+        }
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `fuel-record-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showMessage('Data exported successfully!', 'success');
+}
+
+// Import data from JSON file
+function importDataFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            // Validate data structure
+            if (!importedData.data) {
+                showMessage('Invalid file format!', 'error');
+                return;
+            }
+            
+            // Confirm import
+            if (!confirm('This will merge the imported data with your existing data. Continue?')) {
+                return;
+            }
+            
+            // Merge transactions (avoid duplicates by ID)
+            if (importedData.data.transactions) {
+                const existingIds = new Set(transactions.map(t => t.id));
+                const newTransactions = importedData.data.transactions.filter(t => !existingIds.has(t.id));
+                transactions = [...transactions, ...newTransactions];
+            }
+            
+            // Merge shift history (avoid duplicates by ID)
+            if (importedData.data.shiftHistory) {
+                const existingShiftIds = new Set(shiftHistory.map(s => s.id));
+                const newShifts = importedData.data.shiftHistory.filter(s => !existingShiftIds.has(s.id));
+                shiftHistory = [...shiftHistory, ...newShifts];
+            }
+            
+            // Update fuel prices if present
+            if (importedData.data.fuelPrices) {
+                if (confirm('Do you want to update fuel prices from the imported file?')) {
+                    fuelPrices = importedData.data.fuelPrices;
+                }
+            }
+            
+            // Save merged data
+            saveData();
+            
+            // Update UI
+            updateDashboard();
+            renderTransactions();
+            renderHistory();
+            updateFilterCounts();
+            loadFuelPrices();
+            updatePetrolPriceFromType();
+            
+            showMessage(`Data imported successfully! Added ${newTransactions.length} transactions and ${newShifts.length} shifts.`, 'success');
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            showMessage('Error importing data. Please check the file format.', 'error');
+        }
+    };
+    
+    reader.readAsText(file);
+    
+    // Reset file input
+    event.target.value = '';
 }
