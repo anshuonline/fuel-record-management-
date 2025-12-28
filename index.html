@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shefali Fuel Record Book</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🙏</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-indigo-900 mb-2">🙏 Shefali Fuel Record Book</h1>
+            <p class="text-gray-600 text-lg">Petrol Pump Payment & Discount Manager</p>
+        </header>
+
+        <!-- Shift Information -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">👤 Shift Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Employee Name</label>
+                    <input type="text" id="employeeName" placeholder="Enter name" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Shift Start Time</label>
+                    <input type="datetime-local" id="shiftStart" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Shift End Time</label>
+                    <input type="datetime-local" id="shiftEnd" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+                <div class="flex items-end gap-2">
+                    <button onclick="saveShiftInfo()" 
+                            class="flex-1 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition duration-200 font-medium">
+                        Save Shift Info
+                    </button>
+                    <button onclick="endShift()" 
+                            class="flex-1 bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition duration-200 font-medium">
+                        End Shift
+                    </button>
+                </div>
+            </div>
+            <div id="currentShift" class="mt-4 p-4 bg-indigo-50 rounded-lg hidden">
+                <p class="text-sm text-gray-700"><strong>Current Shift:</strong> <span id="displayEmployeeName"></span></p>
+                <p class="text-sm text-gray-700"><strong>Start:</strong> <span id="displayShiftStart"></span> | <strong>End:</strong> <span id="displayShiftEnd"></span></p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-lg shadow-lg p-4 mb-6">
+            <div class="flex gap-4">
+                <button onclick="showPage('current')" id="tabCurrent"
+                        class="tab-btn active flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition duration-200 font-medium">
+                    📊 Current Shift
+                </button>
+                <button onclick="showPage('history')" id="tabHistory"
+                        class="tab-btn flex-1 bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition duration-200 font-medium">
+                    📅 All Shifts History
+                </button>
+                <button onclick="showPage('settings')" id="tabSettings"
+                        class="tab-btn flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition duration-200 font-medium">
+                    ⚙️ Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- Current Shift Page -->
+        <div id="currentPage">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Cash Payment Card -->
+            <div class="bg-gradient-to-br from-green-400 to-green-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition duration-200">
+                <h3 class="text-xl font-semibold mb-2 flex items-center">
+                    <span class="text-3xl mr-2">💵</span> Cash Payment
+                </h3>
+                <div class="text-4xl font-bold mb-2" id="cashTotal">₹0.00</div>
+                <div class="text-sm opacity-90">Discount: ₹<span id="cashDiscount">0.00</span></div>
+            </div>
+
+            <!-- Card Payment Card -->
+            <div class="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition duration-200">
+                <h3 class="text-xl font-semibold mb-2 flex items-center">
+                    <span class="text-3xl mr-2">💳</span> Card Payment
+                </h3>
+                <div class="text-4xl font-bold mb-2" id="cardTotal">₹0.00</div>
+                <div class="text-sm opacity-90">Discount: ₹<span id="cardDiscount">0.00</span></div>
+            </div>
+
+            <!-- Online Payment Card -->
+            <div class="bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition duration-200">
+                <h3 class="text-xl font-semibold mb-2 flex items-center">
+                    <span class="text-3xl mr-2">📱</span> Online Payment
+                </h3>
+                <div class="text-4xl font-bold mb-2" id="onlineTotal">₹0.00</div>
+                <div class="text-sm opacity-90">Discount: ₹<span id="onlineDiscount">0.00</span></div>
+            </div>
+
+            <!-- Total Card -->
+            <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition duration-200">
+                <h3 class="text-xl font-semibold mb-2 flex items-center">
+                    <span class="text-3xl mr-2">💰</span> Total Collection
+                </h3>
+                <div class="text-4xl font-bold mb-2" id="grandTotal">₹0.00</div>
+                <div class="text-sm opacity-90">Payment: ₹<span id="totalDiscount">0.00</span></div>
+            </div>
+        </div>
+
+        <!-- Total Discount Summary -->
+        <div class="bg-gradient-to-r from-red-500 to-pink-600 rounded-lg shadow-lg p-6 mb-8 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 flex items-center">
+                        <span class="text-4xl mr-3">🎁</span> Total Discount Given
+                    </h2>
+                    <p class="text-sm opacity-90">Cash Discount + Online Discount (Card + Online)</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-5xl font-bold" id="totalDiscountGiven">₹0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Transaction Form -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">➕ Add New Transaction</h2>
+            
+            <!-- Discount Calculator -->
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-orange-200 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-bold text-orange-800 mb-3 flex items-center">
+                    🧮 Quick Discount Calculator
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fuel Type</label>
+                        <select id="fuelType" onchange="updatePetrolPriceFromType()" 
+                                class="w-full px-4 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                            <option value="normal">⛽ Normal Petrol</option>
+                            <option value="xp95">🚀 XP95 (Speed)</option>
+                            <option value="diesel">🚚 Diesel</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fuel Price (₹/L)</label>
+                        <input type="number" id="petrolPrice" placeholder="106.39" step="0.01" min="0" readonly
+                               class="w-full px-4 py-2 border border-orange-300 rounded-lg bg-gray-50 font-semibold text-gray-700">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Customer Price (₹)</label>
+                        <input type="number" id="customerPrice" placeholder="245" step="0.01" min="0"
+                               class="w-full px-4 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Calculated Discount</label>
+                        <div class="w-full px-4 py-2 bg-green-100 border-2 border-green-500 rounded-lg font-bold text-green-700 text-lg flex items-center justify-center" id="calculatedDiscount">
+                            ₹0.00
+                        </div>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="useCalculatedDiscount()" 
+                                class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 font-medium">
+                            Use Discount ↓
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Amount (₹) <span class="text-gray-400 text-xs">(Optional)</span></label>
+                    <input type="number" id="paymentAmount" placeholder="0.00" step="0.01" min="0"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Discount (₹) <span class="text-red-500">*</span></label>
+                    <input type="number" id="discountAmount" placeholder="0.00" step="0.01" min="0"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                    <select id="paymentMethod" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="online">Online</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="addTransaction()" 
+                            class="w-full bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200 font-medium">
+                        Add Transaction
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                <h2 class="text-2xl font-bold text-gray-800">📋 Transaction History</h2>
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Filter Buttons -->
+                    <div class="flex gap-2">
+                        <button onclick="filterTransactions('all')" id="filterAll"
+                                class="filter-btn active bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200 text-sm font-medium">
+                            All (<span id="countAll">0</span>)
+                        </button>
+                        <button onclick="filterTransactions('cash')" id="filterCash"
+                                class="filter-btn bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200 text-sm font-medium">
+                            💵 Cash (<span id="countCash">0</span>)
+                        </button>
+                        <button onclick="filterTransactions('card')" id="filterCard"
+                                class="filter-btn bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition duration-200 text-sm font-medium">
+                            💳 Card (<span id="countCard">0</span>)
+                        </button>
+                        <button onclick="filterTransactions('online')" id="filterOnline"
+                                class="filter-btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200 text-sm font-medium">
+                            📱 Online (<span id="countOnline">0</span>)
+                        </button>
+                    </div>
+                    <button onclick="clearAllData()" 
+                            class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200 text-sm font-medium">
+                        Clear All Data
+                    </button>
+                </div>
+            </div>
+            <!-- Filter Summary -->
+            <div id="filterSummary" class="mb-4 p-4 bg-indigo-50 rounded-lg hidden">
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <span class="font-semibold text-gray-700">Filtered Total Payment:</span>
+                        <span class="text-lg font-bold text-indigo-600 ml-2">₹<span id="filteredTotal">0.00</span></span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700">Filtered Total Discount:</span>
+                        <span class="text-lg font-bold text-green-600 ml-2">₹<span id="filteredDiscount">0.00</span></span>
+                    </div>
+                    <div>
+                        <span class="font-semibold text-gray-700">Transactions:</span>
+                        <span class="text-lg font-bold text-gray-800 ml-2"><span id="filteredCount">0</span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Time</th>
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Payment Method</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Amount</th>
+                            <th class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Discount</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-gray-500">No transactions yet. Add your first transaction above!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        </div>
+        <!-- End of Current Page -->
+
+        <!-- History Page -->
+        <div id="historyPage" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800">📅 Complete Shift History</h2>
+                    <button onclick="clearHistory()" 
+                            class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition duration-200 text-sm font-medium">
+                        Clear History
+                    </button>
+                </div>
+                <div id="historyContent">
+                    <p class="text-center text-gray-500 py-8">No shift history available yet.</p>
+                </div>
+            </div>
+        </div>
+        <!-- End of History Page -->
+
+        <!-- Settings Page -->
+        <div id="settingsPage" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">⚙️ Fuel Price Settings</h2>
+                <p class="text-gray-600 mb-6">Set the fuel prices once. These prices will be used automatically in the discount calculator.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Normal Petrol -->
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="text-4xl mr-3">⛽</span>
+                            <h3 class="text-xl font-bold text-green-800">Normal Petrol</h3>
+                        </div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Price per Liter (₹)</label>
+                        <input type="number" id="normalPetrolPrice" placeholder="106.39" step="0.01" min="0"
+                               class="w-full px-4 py-3 border-2 border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg font-semibold">
+                    </div>
+                    
+                    <!-- XP95 Speed -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="text-4xl mr-3">🚀</span>
+                            <h3 class="text-xl font-bold text-blue-800">XP95 (Speed)</h3>
+                        </div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Price per Liter (₹)</label>
+                        <input type="number" id="xp95Price" placeholder="113.73" step="0.01" min="0"
+                               class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold">
+                    </div>
+                    
+                    <!-- Diesel -->
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-300 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="text-4xl mr-3">🚚</span>
+                            <h3 class="text-xl font-bold text-orange-800">Diesel</h3>
+                        </div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Price per Liter (₹)</label>
+                        <input type="number" id="dieselPrice" placeholder="90.00" step="0.01" min="0"
+                               class="w-full px-4 py-3 border-2 border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-lg font-semibold">
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex justify-center">
+                    <button onclick="saveFuelPrices()" 
+                            class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition duration-200 font-medium text-lg shadow-lg">
+                        💾 Save Fuel Prices
+                    </button>
+                </div>
+                
+                <!-- Current Prices Display -->
+                <div id="currentPricesDisplay" class="mt-8 bg-indigo-50 rounded-lg p-6 hidden">
+                    <h3 class="text-lg font-bold text-indigo-900 mb-4">💰 Current Saved Prices</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <p class="text-sm text-gray-600">⛽ Normal Petrol</p>
+                            <p class="text-2xl font-bold text-green-600" id="displayNormalPrice">₹0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">🚀 XP95 (Speed)</p>
+                            <p class="text-2xl font-bold text-blue-600" id="displayXP95Price">₹0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">🚚 Diesel</p>
+                            <p class="text-2xl font-bold text-orange-600" id="displayDieselPrice">₹0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-600 text-sm py-4">
+            <p>Made with love in India by - <a href="https://www.linkedin.com/in/rajdeep-pandit-22b543282/" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-medium">Rajdeep Pandit</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
