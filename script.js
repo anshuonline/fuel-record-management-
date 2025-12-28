@@ -46,23 +46,34 @@ function initDB() {
 
 // Load data from localStorage on page load
 window.addEventListener('DOMContentLoaded', async () => {
-    await initDB();
-    await loadData();
-    updateDashboard();
-    renderTransactions();
-    displayShiftInfo();
-    updateFilterCounts();
-    renderHistory();
-    loadFuelPrices();
-    updatePetrolPriceFromType();
-    
-    // Set current date/time as default for shift start
-    const now = new Date();
-    const dateTimeString = now.toISOString().slice(0, 16);
-    document.getElementById('shiftStart').value = dateTimeString;
-    
-    // Add event listeners for calculator
-    document.getElementById('customerPrice').addEventListener('input', autoCalculateDiscount);
+    try {
+        await initDB();
+        await loadData();
+        updateDashboard();
+        renderTransactions();
+        displayShiftInfo();
+        updateFilterCounts();
+        renderHistory();
+        loadFuelPrices();
+        updatePetrolPriceFromType();
+        
+        // Set current date/time as default for shift start
+        const now = new Date();
+        const dateTimeString = now.toISOString().slice(0, 16);
+        document.getElementById('shiftStart').value = dateTimeString;
+        
+        // Add event listeners for calculator
+        document.getElementById('customerPrice').addEventListener('input', autoCalculateDiscount);
+        
+        // Auto-save every 30 seconds to ensure data persistence
+        setInterval(() => {
+            saveToIndexedDB();
+        }, 30000);
+        
+    } catch (error) {
+        console.error('Initialization error:', error);
+        showMessage('App loaded. Using backup storage.', 'success');
+    }
 });
 
 // Save shift information
@@ -496,71 +507,113 @@ function clearAllData() {
 
 // Save data to localStorage
 function saveData() {
-    // Save to localStorage (backup)
-    localStorage.setItem('fuelRecordTransactions', JSON.stringify(transactions));
-    localStorage.setItem('fuelRecordShiftInfo', JSON.stringify(shiftInfo));
-    localStorage.setItem('fuelRecordShiftHistory', JSON.stringify(shiftHistory));
-    localStorage.setItem('fuelRecordPrices', JSON.stringify(fuelPrices));
+    try {
+        // Save to localStorage (backup)
+        localStorage.setItem('fuelRecordTransactions', JSON.stringify(transactions));
+        localStorage.setItem('fuelRecordShiftInfo', JSON.stringify(shiftInfo));
+        localStorage.setItem('fuelRecordShiftHistory', JSON.stringify(shiftHistory));
+        localStorage.setItem('fuelRecordPrices', JSON.stringify(fuelPrices));
+    } catch (e) {
+        console.error('LocalStorage save error:', e);
+    }
     
-    // Save to IndexedDB (persistent)
+    // Save to IndexedDB (persistent storage)
     saveToIndexedDB();
 }
 
-// Save to IndexedDB
+// Save to IndexedDB with error handling
 function saveToIndexedDB() {
-    if (!db) return;
+    if (!db) {
+        console.warn('IndexedDB not available');
+        return Promise.resolve();
+    }
     
-    const transaction = db.transaction([STORE_NAME], 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    
-    const allData = {
-        key: 'fuelRecordData',
-        transactions: transactions,
-        shiftInfo: shiftInfo,
-        shiftHistory: shiftHistory,
-        fuelPrices: fuelPrices,
-        lastUpdated: new Date().toISOString()
-    };
-    
-    store.put(allData);
+    return new Promise((resolve, reject) => {
+        try {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            
+            const allData = {
+                key: 'fuelRecordData',
+                transactions: transactions,
+                shiftInfo: shiftInfo,
+                shiftHistory: shiftHistory,
+                fuelPrices: fuelPrices,
+                lastUpdated: new Date().toISOString()
+            };
+            
+            const request = store.put(allData);
+            
+            request.onsuccess = () => {
+                console.log('Data saved to IndexedDB successfully');
+                resolve();
+            };
+            
+            request.onerror = () => {
+                console.error('IndexedDB save error:', request.error);
+                reject(request.error);
+            };
+            
+        } catch (error) {
+            console.error('IndexedDB transaction error:', error);
+            reject(error);
+        }
+    });
 }
 
 // Load data from localStorage
 function loadData() {
     return new Promise(async (resolve) => {
-        // Try to load from IndexedDB first
-        const indexedDBData = await loadFromIndexedDB();
-        
-        if (indexedDBData) {
-            transactions = indexedDBData.transactions || [];
-            shiftInfo = indexedDBData.shiftInfo || { employeeName: '', shiftStart: '', shiftEnd: '' };
-            shiftHistory = indexedDBData.shiftHistory || [];
-            fuelPrices = indexedDBData.fuelPrices || { normal: 106.39, xp95: 113.73, diesel: 90.00 };
-        } else {
-            // Fallback to localStorage
-            const savedTransactions = localStorage.getItem('fuelRecordTransactions');
-            const savedShiftInfo = localStorage.getItem('fuelRecordShiftInfo');
-            const savedShiftHistory = localStorage.getItem('fuelRecordShiftHistory');
-            const savedFuelPrices = localStorage.getItem('fuelRecordPrices');
+        try {
+            // Try to load from IndexedDB first (persistent storage)
+            const indexedDBData = await loadFromIndexedDB();
             
-            if (savedTransactions) {
-                transactions = JSON.parse(savedTransactions);
+            if (indexedDBData && indexedDBData.transactions) {
+                console.log('Loading data from IndexedDB');
+                transactions = indexedDBData.transactions || [];
+                shiftInfo = indexedDBData.shiftInfo || { employeeName: '', shiftStart: '', shiftEnd: '' };
+                shiftHistory = indexedDBData.shiftHistory || [];
+                fuelPrices = indexedDBData.fuelPrices || { normal: 106.39, xp95: 113.73, diesel: 90.00 };
+                
+                // Also save to localStorage as backup
+                try {
+                    localStorage.setItem('fuelRecordTransactions', JSON.stringify(transactions));
+                    localStorage.setItem('fuelRecordShiftInfo', JSON.stringify(shiftInfo));
+                    localStorage.setItem('fuelRecordShiftHistory', JSON.stringify(shiftHistory));
+                    localStorage.setItem('fuelRecordPrices', JSON.stringify(fuelPrices));
+                } catch (e) {
+                    console.error('LocalStorage backup failed:', e);
+                }
+            } else {
+                console.log('Loading data from localStorage (fallback)');
+                // Fallback to localStorage
+                const savedTransactions = localStorage.getItem('fuelRecordTransactions');
+                const savedShiftInfo = localStorage.getItem('fuelRecordShiftInfo');
+                const savedShiftHistory = localStorage.getItem('fuelRecordShiftHistory');
+                const savedFuelPrices = localStorage.getItem('fuelRecordPrices');
+                
+                if (savedTransactions) {
+                    transactions = JSON.parse(savedTransactions);
+                }
+                
+                if (savedShiftInfo) {
+                    shiftInfo = JSON.parse(savedShiftInfo);
+                }
+                
+                if (savedShiftHistory) {
+                    shiftHistory = JSON.parse(savedShiftHistory);
+                }
+                
+                if (savedFuelPrices) {
+                    fuelPrices = JSON.parse(savedFuelPrices);
+                }
+                
+                // Migrate to IndexedDB for future persistence
+                await saveToIndexedDB();
+                console.log('Data migrated to IndexedDB');
             }
-            
-            if (savedShiftInfo) {
-                shiftInfo = JSON.parse(savedShiftInfo);
-            }
-            
-            if (savedShiftHistory) {
-                shiftHistory = JSON.parse(savedShiftHistory);
-            }
-            
-            if (savedFuelPrices) {
-                fuelPrices = JSON.parse(savedFuelPrices);
-            }
-            
-            // Save to IndexedDB for future
-            saveToIndexedDB();
+        } catch (error) {
+            console.error('Load data error:', error);
         }
         
         resolve();
