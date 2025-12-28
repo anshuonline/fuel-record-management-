@@ -164,6 +164,81 @@ function updatePetrolPriceFromType() {
     autoCalculateDiscount();
 }
 
+// Update petrol price for liters method
+function updatePetrolPriceFromTypeLiters() {
+    const fuelType = document.getElementById('fuelTypeLiters').value;
+    let price = 0;
+    
+    if (fuelType === 'normal') {
+        price = fuelPrices.normal;
+    } else if (fuelType === 'xp95') {
+        price = fuelPrices.xp95;
+    } else if (fuelType === 'diesel') {
+        price = fuelPrices.diesel;
+    }
+    
+    document.getElementById('petrolPriceLiters').value = price.toFixed(2);
+    calculateByLiters();
+}
+
+// Toggle between calculation methods
+function toggleCalculationMethod() {
+    const method = document.querySelector('input[name="calcMethod"]:checked').value;
+    
+    if (method === 'price') {
+        document.getElementById('priceMethod').classList.remove('hidden');
+        document.getElementById('litersMethod').classList.add('hidden');
+        document.getElementById('litersMethodInfo').classList.add('hidden');
+    } else {
+        document.getElementById('priceMethod').classList.add('hidden');
+        document.getElementById('litersMethod').classList.remove('hidden');
+        document.getElementById('litersMethodInfo').classList.remove('hidden');
+        updatePetrolPriceFromTypeLiters();
+        calculateByLiters();
+    }
+}
+
+// Calculate discount by liters (1 liter = 1 rupee discount by default)
+function calculateByLiters() {
+    const liters = parseFloat(document.getElementById('litersAmount').value) || 0;
+    const discountPerLiter = parseFloat(document.getElementById('discountPerLiter').value) || 1;
+    const fuelPrice = parseFloat(document.getElementById('petrolPriceLiters').value) || 0;
+    
+    if (liters > 0 && fuelPrice > 0) {
+        const totalDiscount = liters * discountPerLiter;
+        const totalAmount = liters * fuelPrice;
+        
+        document.getElementById('calculatedDiscountLiters').textContent = `₹${totalDiscount.toFixed(2)}`;
+        document.getElementById('totalAmountLiters').textContent = `₹${totalAmount.toFixed(2)}`;
+    } else {
+        document.getElementById('calculatedDiscountLiters').textContent = '₹0.00';
+        document.getElementById('totalAmountLiters').textContent = '₹0.00';
+    }
+}
+
+// Use calculated discount from liters method
+function useCalculatedDiscountLiters() {
+    const discountText = document.getElementById('calculatedDiscountLiters').textContent;
+    const discountValue = discountText.replace('₹', '');
+    
+    if (discountValue === '0.00') {
+        showMessage('Please enter liters first', 'error');
+        return;
+    }
+    
+    // Set the discount in the transaction form
+    document.getElementById('discountAmount').value = discountValue;
+    
+    // Set the total amount as payment amount
+    const amountText = document.getElementById('totalAmountLiters').textContent;
+    const amountValue = amountText.replace('₹', '');
+    if (amountValue) {
+        document.getElementById('paymentAmount').value = amountValue;
+    }
+    
+    showMessage('Discount and amount added to transaction form!', 'success');
+}
+
 // Use calculated discount in the transaction form
 function useCalculatedDiscount() {
     const calculatedText = document.getElementById('calculatedDiscount').textContent;
