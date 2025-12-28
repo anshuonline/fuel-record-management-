@@ -1,4 +1,4 @@
-# 🙏 Shefali Fuel Record Book
+# 🙏 Fuel Record Book
 
 A modern, user-friendly web application for managing fuel records at petrol pumps. Track payments, discounts, and shifts with ease.
 
