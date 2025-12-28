@@ -153,8 +153,17 @@ function autoCalculateDiscount() {
         // Calculate: customer_price / fuel_price = discount
         const discount = customerPrice / petrolPrice;
         document.getElementById('calculatedDiscount').textContent = `₹${discount.toFixed(2)}`;
+        
+        // Calculate fuel to give: customer_price + discount
+        const fuelToGive = customerPrice + discount;
+        document.getElementById('fuelToGive').textContent = `₹${fuelToGive.toFixed(2)}`;
+        document.getElementById('fuelToGive').classList.add('animate-pulse');
+        setTimeout(() => {
+            document.getElementById('fuelToGive').classList.remove('animate-pulse');
+        }, 500);
     } else {
         document.getElementById('calculatedDiscount').textContent = '₹0.00';
+        document.getElementById('fuelToGive').textContent = '₹0.00';
     }
 }
 
@@ -218,12 +227,15 @@ function calculateByLiters() {
     if (liters > 0 && fuelPrice > 0) {
         const totalDiscount = liters * discountPerLiter;
         const totalAmount = liters * fuelPrice;
+        const fuelToGive = totalAmount + totalDiscount;
         
         document.getElementById('calculatedDiscountLiters').textContent = `₹${totalDiscount.toFixed(2)}`;
         document.getElementById('totalAmountLiters').textContent = `₹${totalAmount.toFixed(2)}`;
+        document.getElementById('fuelToGiveLiters').textContent = `₹${fuelToGive.toFixed(2)}`;
     } else {
         document.getElementById('calculatedDiscountLiters').textContent = '₹0.00';
         document.getElementById('totalAmountLiters').textContent = '₹0.00';
+        document.getElementById('fuelToGiveLiters').textContent = '₹0.00';
     }
 }
 
